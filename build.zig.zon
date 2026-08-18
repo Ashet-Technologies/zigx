@@ -6,8 +6,8 @@
     .minimum_zig_version = "0.15.2",
     .dependencies = .{
         .TrueType = .{
-            .url = "git+https://codeberg.org/andrewrk/TrueType#b0f9867671a14ce4ed75a05a7e52c927623095e5",
-            .hash = "TrueType-0.0.0-Ne-mWMxxAQDit1oHfxlK2lkZAX8P7Wsa2SBPaR_xSpc8",
+            .url = "git+https://codeberg.org/marler/TrueType#1d2012f9b7af8c6bb224017a459b0124fcf004ed",
+            .hash = "TrueType-0.0.0-Ne-mWNVzAQBpo-7-locnCb9lfth2lCeCa2WT6Og7Kbzs",
         },
         // Used by examples
         .inter = .{

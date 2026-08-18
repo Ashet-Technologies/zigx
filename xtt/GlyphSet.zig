@@ -94,16 +94,13 @@ pub fn uploadIfNeeded(
 
     var r8: std.ArrayListUnmanaged(u8) = .empty;
     defer r8.deinit(scratch);
-    const dims = self.ttf.glyphBitmap(
+    const dims = try self.ttf.glyphBitmap(
         scratch,
         &r8,
         glyph_index,
         self.scale,
         self.scale,
-    ) catch |err| switch (err) {
-        error.GlyphNotFound => return self.uploadEmpty(lazy, sink, glyph_index),
-        else => |e| return e,
-    };
+    );
 
     const w: u32 = dims.width;
     const h: u32 = dims.height;
@@ -133,34 +130,6 @@ pub fn uploadIfNeeded(
         try sink.writer.writeAll(r8.items[row_start..][0..dims.width]);
         try sink.writer.splatByteAll(0, @intCast(stride - w));
     }
-    try x11.render.AddGlyphsFinish(sink, pad_len);
-    self.uploaded.set(glyph_index);
-}
-
-/// Upload a zero-size glyph so the server knows the ID exists.
-fn uploadEmpty(
-    self: *GlyphSet,
-    lazy: *xtt.Lazy,
-    sink: *x11.RequestSink,
-    glyph_index: TrueType.GlyphIndex,
-) error{WriteFailed}!void {
-    const advance: i16 = @intFromFloat(@round(self.scaled(lazy.hMetrics(self.ttf, glyph_index).advance_width)));
-    const info: x11.render.GlyphInfo = .{
-        .width = 0,
-        .height = 0,
-        .x = 0,
-        .y = 0,
-        .x_off = advance,
-        .y_off = 0,
-    };
-    const pad_len = try x11.render.AddGlyphsStart(
-        sink,
-        self.render_ext_opcode,
-        self.glyphset,
-        @intFromEnum(glyph_index),
-        info,
-        0,
-    );
     try x11.render.AddGlyphsFinish(sink, pad_len);
     self.uploaded.set(glyph_index);
 }
