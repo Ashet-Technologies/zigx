@@ -20,8 +20,8 @@ fn Payload(comptime bit_count: comptime_int) type {
     const remaining_bits = 29 - bit_count;
     const shift_bits = std.math.log2_int_ceil(u32, remaining_bits + 1);
     return packed struct {
-        shift: std.meta.Int(.unsigned, shift_bits),
-        base: std.meta.Int(.unsigned, remaining_bits),
+        shift: @Int(.unsigned, shift_bits),
+        base: @Int(.unsigned, remaining_bits),
     };
 }
 

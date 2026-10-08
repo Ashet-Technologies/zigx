@@ -19,8 +19,8 @@ pub const ConnectError = error{
     // Error from authenticate error
     AuthRejected,
 };
-pub fn connect(read_buffer: []u8) ConnectError!x11.Authenticator.Success {
-    const display = x11.getDisplay() catch |err| {
+pub fn connect(env: *std.process.Environ.Map, read_buffer: []u8) ConnectError!x11.Authenticator.Success {
+    const display = x11.getDisplay(env) catch |err| {
         x11.log.err("failed to get x11 display with {s}", .{@errorName(err)});
         return error.GetDisplay;
     };

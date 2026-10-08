@@ -7,7 +7,7 @@ pub const Full = struct {
         var result: Full = undefined;
         for (&result.array) |*entry_ref| {
             // TODO: initialize to VoidSymbol instead of 0
-            entry_ref.* = [1]x11.charset.Combined{@enumFromInt(0)} ** 4;
+            entry_ref.* = @splat(@enumFromInt(0));
         }
         return result;
     }

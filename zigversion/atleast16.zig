@@ -6,14 +6,12 @@ pub fn NonExhaustive(comptime T: type) type {
         .@"enum" => |info| info,
         else => |info| @compileError("expected an Enum type but got a(n) " ++ @tagName(info)),
     };
-    std.debug.assert(info.is_exhaustive);
-    var names: [info.fields.len][]const u8 = undefined;
-    var values: [info.fields.len]info.tag_type = undefined;
-    for (&names, &values, info.fields) |*name, *value, field| {
-        name.* = field.name;
-        value.* = field.value;
+    std.debug.assert(info.mode == .exhaustive);
+    var values: [info.field_names.len]info.tag_type = undefined;
+    for (&values, info.field_values) |*value, field_value| {
+        value.* = field_value;
     }
-    return @Enum(info.tag_type, .nonexhaustive, &names, &values);
+    return @Enum(info.tag_type, .nonexhaustive, info.field_names, &values);
 }
 
 pub fn ArrayPointer(comptime T: type) type {

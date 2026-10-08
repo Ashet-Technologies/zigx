@@ -323,7 +323,10 @@ test "minimal setup reply (1 format, 1 screen, 1 depth, 1 visual)" {
     // This exercises the edge case where Setup.required() over-counts by 8
     // because it includes @sizeOf(Setup) instead of @sizeOf(Setup) - 8.
     const minimal_serialized = comptime std.mem.toBytes(x11.Format{
-        .depth = 24, .bits_per_pixel = 32, .scanline_pad = 32, ._ = .{ 0, 0, 0, 0, 0 },
+        .depth = 24,
+        .bits_per_pixel = 32,
+        .scanline_pad = 32,
+        ._ = .{ 0, 0, 0, 0, 0 },
     }) ++ std.mem.toBytes(x11.ScreenHeader{
         .root = @enumFromInt(1),
         .colormap = @enumFromInt(2),
@@ -342,7 +345,10 @@ test "minimal setup reply (1 format, 1 screen, 1 depth, 1 visual)" {
         .root_depth = 24,
         .allowed_depth_count = 1,
     }) ++ std.mem.toBytes(x11.ScreenDepth{
-        .depth = 24, .unused0 = 0, .visual_type_count = 1, .unused1 = 0,
+        .depth = 24,
+        .unused0 = 0,
+        .visual_type_count = 1,
+        .unused1 = 0,
     }) ++ std.mem.toBytes(x11.VisualType{
         .id = @enumFromInt(33),
         .class = @enumFromInt(@intFromEnum(x11.VisualType.Class.true_color)),
@@ -468,7 +474,7 @@ test "xauth reader" {
 
 test "discardRemaining after kind" {
     for (0..256) |kind| {
-        var buffer = [1]u8{0} ** 32;
+        var buffer: [32]u8 = @splat(0);
         buffer[0] = @intCast(kind);
         var buffer_reader: std.Io.Reader = .fixed(&buffer);
         var source: x11.Source = .initAfterSetup(&buffer_reader);
@@ -485,7 +491,7 @@ test "discardRemaining after kind" {
 
 test "discardRemaining after read2" {
     for (0..256) |kind| {
-        var buffer = [1]u8{0} ** 32;
+        var buffer: [32]u8 = @splat(0);
         buffer[0] = @intCast(kind);
         var buffer_reader: std.Io.Reader = .fixed(&buffer);
         var source: x11.Source = .initAfterSetup(&buffer_reader);
@@ -507,7 +513,7 @@ test "discardRemaining after read2" {
 }
 test "readFmt" {
     for (0..256) |kind| {
-        var buffer = [1]u8{0} ** 32;
+        var buffer: [32]u8 = @splat(0);
         buffer[0] = @intCast(kind);
         var buffer_reader: std.Io.Reader = .fixed(&buffer);
         var source: x11.Source = .initAfterSetup(&buffer_reader);

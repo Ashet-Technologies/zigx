@@ -217,25 +217,14 @@ pub const GetDisplayError = error{
 /// Returns the DISPLAY environment variable for any platform.
 /// On windows it just uses the page allocator and leaks the result.
 /// Use getDisplayPosix which has no possible error for non-windows systems.
-pub fn getDisplay() GetDisplayError!Display {
-    if (builtin.os.tag == .windows) {
-        // we'll just make an allocator and never free it, no
-        // big deal
-        var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-        return .{ .string = std.process.getEnvVarOwned(arena.allocator(), "DISPLAY") catch |err| switch (err) {
-            error.EnvironmentVariableNotFound => null,
-            error.OutOfMemory,
-            error.InvalidWtf8,
-            => |e| return e,
-        } };
-    }
-    return getDisplayPosix();
+pub fn getDisplay(env: *std.process.Environ.Map) GetDisplayError!Display {
+    return .{ .string = env.get("DISPLAY").? };
 }
 
-/// Posix-specific function to get DISPLAY which cannot fail.
-pub fn getDisplayPosix() Display {
-    return .{ .string = posix.getenv("DISPLAY") };
-}
+// /// Posix-specific function to get DISPLAY which cannot fail.
+// pub fn getDisplayPosix() Display {
+//     return .{ .string = posix.getenv("DISPLAY") };
+// }
 
 pub const Protocol = enum {
     unix,
@@ -342,15 +331,15 @@ pub fn parseDisplay(display: Display) InvalidDisplayError!ParsedDisplay {
 }
 
 pub const Host = union(enum) {
-    address: std.net.Address,
+    address: std.Io.net.IpAddress,
     domain_name: struct {
         string: []const u8,
         port: u16,
     },
     pub fn initDomainName(host: []const u8, port: u16) Host {
         std.debug.assert(host.len != 0);
-        if (std.net.Address.parseIp4(host, port)) |addr| return .{ .address = addr } else |_| {}
-        if (std.net.Address.parseIp6(host, port)) |addr| return .{ .address = addr } else |_| {}
+        if (std.Io.net.IpAddress.parseIp4(host, port)) |addr| return .{ .address = addr } else |_| {}
+        if (std.Io.net.IpAddress.parseIp6(host, port)) |addr| return .{ .address = addr } else |_| {}
         // TODO: should/could we check if this is a valid hostname?
         //       maybe not since we might detect this later during DNS resolution?
         return .{ .domain_name = .{ .string = host, .port = port } };
@@ -375,11 +364,12 @@ pub fn getHost(display: Display, parsed: *const ParsedDisplay) error{X11BadDispl
                 log.err("not sure if it's valid for DISPLAY to host with the unix protocol", .{});
                 return error.X11BadDisplay;
             }
-            var addr: std.net.Address = .{ .un = .{ .family = posix.AF.UNIX, .path = undefined } };
-            _ = std.fmt.bufPrintZ(
-                &addr.un.path,
+            var addr: std.Io.net.UnixAddress = .{ .path = undefined };
+            _ = std.mem.printSentinel(
+                &addr.path,
                 "/tmp/.X11-unix/X{d}",
                 .{@intFromEnum(parsed.display_num)},
+                0,
             ) catch unreachable;
             return .{ .address = addr };
         },
@@ -517,7 +507,7 @@ pub const Authenticator = struct {
         no_more_auth,
     };
 
-    pub const Success = struct { std.net.Stream.Reader, bool };
+    pub const Success = struct { std.Io.net.Stream.Reader, bool };
 
     pub const Event = union(enum) {
         reply: union(enum) {
@@ -994,9 +984,9 @@ fn connectTcp(addr: *const std.net.Address) ConnectTcpError!std.net.Stream {
     };
 }
 
-pub fn disconnect(stream: std.net.Stream) void {
-    posix.shutdown(stream.handle, .both) catch {}; // ignore any error here
-    stream.close();
+pub fn disconnect(stream: std.Io.net.Stream, io: std.Io) void {
+    stream.shutdown(io, .both) catch {};
+    stream.close(io);
 }
 
 const ConnectUnixError = error{

@@ -119,9 +119,7 @@ pub fn build(b: *std.Build) void {
 
         const run = b.addRunArtifact(exe);
         run.step.dependOn(&install.step);
-        if (b.args) |args| {
-            run.addArgs(args);
-        }
+        run.addPassthruArgs();
         b.step(example.name, "").dependOn(&run.step);
     }
 
@@ -174,9 +172,7 @@ pub fn build(b: *std.Build) void {
 
         const run = b.addRunArtifact(exe);
         run.step.dependOn(&install.step);
-        if (b.args) |args| {
-            run.addArgs(args);
-        }
+        run.addPassthruArgs();
         b.step("hellox11", "").dependOn(&run.step);
     }
 
@@ -217,7 +213,7 @@ pub fn build(b: *std.Build) void {
 
         const run = b.addRunArtifact(xauth_exe);
         run.step.dependOn(&install.step);
-        if (b.args) |args| run.addArgs(args);
+        run.addPassthruArgs();
         b.step("xauth", "Run the xauth cmdline tool").dependOn(&run.step);
     }
 }
